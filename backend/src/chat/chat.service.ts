@@ -24,7 +24,7 @@ export class ChatService {
     const currentEventState = conversation.event ? JSON.stringify(conversation.event) : "No event created yet.";
     const dynamicSystemPrompt = `${EVENT_ARCHITECT_SYSTEM_PROMPT}\n\nCURRENT EVENT STATE: ${currentEventState}`;
 
-    const formattedHistory = conversation.messages.map(m => ({
+    const formattedHistory = conversation.messages.map((m: any) => ({
       role: m.role as 'user' | 'ai',
       content: m.content
     }));
