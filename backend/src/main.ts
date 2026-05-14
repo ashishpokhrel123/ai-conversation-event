@@ -6,15 +6,21 @@ import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
 import { ConfigService } from '@nestjs/config';
 
-const getAllowedOrigins = (frontendUrl: string | undefined): string[] => {
-  return frontendUrl
-    ? frontendUrl.split(',').map((url) => url.trim())
-    : [
-        'http://localhost:3000',
-        'http://127.0.0.1:3000',
-        'http://localhost:3001',
-        'http://127.0.0.1:3001',
-      ];
+const getAllowedOrigins = (frontendUrl: string | undefined): (string | RegExp)[] => {
+  const origins: (string | RegExp)[] = [
+    'http://localhost:3000',
+    'http://127.0.0.1:3000',
+    'http://localhost:3001',
+    'http://127.0.0.1:3001',
+    /\.vercel\.app$/, // Allow all Vercel subdomains for easier preview testing
+  ];
+
+  if (frontendUrl) {
+    const customOrigins = frontendUrl.split(',').map((url) => url.trim());
+    origins.push(...customOrigins);
+  }
+
+  return origins;
 };
 
 let cachedApp: any;
@@ -29,8 +35,8 @@ async function bootstrap() {
     app.enableCors({
       origin: getAllowedOrigins(configService.get<string>('FRONTEND_URL')),
       credentials: true,
-      methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-      allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'X-Requested-With'],
+      methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
+      allowedHeaders: 'Content-Type,Accept,Authorization,X-Requested-With',
     });
 
     app.useGlobalPipes(

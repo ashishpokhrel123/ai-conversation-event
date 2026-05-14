@@ -112,7 +112,7 @@ export const EventPreview = () => {
                   </div>
                 </div>
 
-                {currentEvent.roles && currentEvent.roles.length > 0 && (
+                {currentEvent.roles && typeof currentEvent.roles === 'object' && Object.keys(currentEvent.roles).length > 0 && (
                   <div className="flex items-start gap-3">
                     <div className="mt-1 rounded-lg bg-zinc-900 p-2 text-zinc-400">
                       <Tag size={18} />
@@ -120,10 +120,11 @@ export const EventPreview = () => {
                     <div>
                       <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-500">Roles</p>
                       <div className="flex flex-wrap gap-2 mt-1">
-                        {currentEvent.roles.map((role: string, i: number) => (
-                          <span key={i} className="px-2 py-0.5 rounded bg-zinc-800 text-zinc-300 text-[10px]">
-                            {role}
-                          </span>
+                        {Object.entries(currentEvent.roles).map(([role, name]) => (
+                          <div key={role} className="flex items-center gap-1.5 px-2 py-0.5 rounded bg-zinc-800 border border-zinc-700/50">
+                            <span className="text-[9px] font-bold uppercase tracking-tighter text-[#ff8a65]">{role}:</span>
+                            <span className="text-[10px] font-medium text-zinc-300">{name as string}</span>
+                          </div>
                         ))}
                       </div>
                     </div>
