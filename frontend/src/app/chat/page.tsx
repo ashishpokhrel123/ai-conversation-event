@@ -1,11 +1,12 @@
 'use client';
 
+import { Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { ChatBox } from '@/components/chat/ChatBox';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft } from 'lucide-react';
 
-export default function ChatPage() {
+function ChatContent() {
   const searchParams = useSearchParams();
   const eventId = searchParams.get('eventId') || undefined;
   const router = useRouter();
@@ -29,5 +30,13 @@ export default function ChatPage() {
         </main>
       </div>
     </div>
+  );
+}
+
+export default function ChatPage() {
+  return (
+    <Suspense fallback={<div className="flex h-screen items-center justify-center bg-zinc-950 text-zinc-500">Loading conversation...</div>}>
+      <ChatContent />
+    </Suspense>
   );
 }

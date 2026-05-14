@@ -10,7 +10,7 @@ function cn(...inputs: ClassValue[]) {
 }
 
 interface ButtonProps extends HTMLMotionProps<'button'> {
-  variant?: 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger';
+  variant?: 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger' | 'coral';
   size?: 'sm' | 'md' | 'lg' | 'icon';
   isLoading?: boolean;
 }
