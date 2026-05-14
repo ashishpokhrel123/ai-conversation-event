@@ -17,40 +17,55 @@ const getAllowedOrigins = (frontendUrl: string | undefined): string[] => {
       ];
 };
 
+let cachedApp: any;
+
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
-  const configService = app.get(ConfigService);
+  if (!cachedApp) {
+    const app = await NestFactory.create(AppModule);
+    const configService = app.get(ConfigService);
 
-  app.use(helmet());
-  app.enableShutdownHooks();
+    app.use(helmet());
+    
+    app.enableCors({
+      origin: getAllowedOrigins(configService.get<string>('FRONTEND_URL')),
+      credentials: true,
+      methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+      allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'X-Requested-With'],
+    });
 
-  app.enableCors({
-    origin: getAllowedOrigins(configService.get<string>('FRONTEND_URL')),
-    credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'X-Requested-With'],
-  });
+    app.useGlobalPipes(
+      new ValidationPipe({
+        whitelist: true,
+        forbidNonWhitelisted: true,
+        transform: true,
+      }),
+    );
 
-  app.useGlobalPipes(
-    new ValidationPipe({
-      whitelist: true,
-      forbidNonWhitelisted: true,
-      transform: true,
-    }),
-  );
+    app.useGlobalFilters(new HttpExceptionFilter());
+    app.useGlobalInterceptors(new LoggingInterceptor());
 
-  app.useGlobalFilters(new HttpExceptionFilter());
-  app.useGlobalInterceptors(new LoggingInterceptor());
-
-  // For Vercel, we don't call listen() if we're being imported
-  if (process.env.NODE_ENV !== 'production') {
-    const port = configService.get<number>('PORT') || 3005;
-    await app.listen(port);
-    console.log(`Application is running on: http://localhost:${port}`);
+    await app.init();
+    cachedApp = app.getHttpAdapter().getInstance();
   }
-
-  return app.getHttpAdapter().getInstance();
+  return cachedApp;
 }
 
-// Export for Vercel
-export default bootstrap();
+// Export the handler for Vercel
+export default async (req: any, res: any) => {
+  const app = await bootstrap();
+  return app(req, res);
+};
+
+// For local development
+if (process.env.NODE_ENV !== 'production') {
+  const startLocal = async () => {
+    const app = await NestFactory.create(AppModule);
+    const configService = app.get(ConfigService);
+    const port = configService.get<number>('PORT') || 3005;
+    
+    app.enableCors();
+    await app.listen(port);
+    console.log(`Local server running on: http://localhost:${port}`);
+  };
+  startLocal();
+}
